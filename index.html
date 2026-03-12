@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <title>Eid Greeting Card</title>
+      <link rel="icon" type="image/x-icon" href="fav.png">
+    <meta property="og:title" content="Eid Mubarak Greeting Card">
+    <meta property="og:description" content="Create and share your personalized Eid greeting card!">
+    <meta property="og:image" content="fav.png">
+     <meta property="og:image" content="https://gulfcoders.com/uni/EID/fav.png">
+    <meta property="og:url" content="https://gulfcoders.com/uni/EID/">
+    <meta property="og:type" content="website">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #121212;
+            font-family: "Poppins", sans-serif;
+            color: #fff;
+        }
+        .container {
+            position: relative;
+            width: 1440px;
+            max-width: 100%;
+        }
+        canvas {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        input, button {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+        input {
+            width: 35%;
+        }
+        button {
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            width: 20%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .share-btn {
+            background-color: #25D366;
+        }
+        .share-btn:hover {
+            background-color: #128C7E;
+        }
+        .toggle-btn {
+            background-color: #6c757d;
+        }
+        .toggle-btn:hover {
+            background-color: #5a6268;
+        }
+        .flex{
+            display: flex;
+    gap: 20px;
+            
+        }
+       @media (max-width: 768px) {
+            .container {
+         padding: 40px;
+        }
+    .flex {
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 20px;
+    }
+     .flex * {
+           width: 100%;
+    }
+     .flex input#username {
+           width: 97%;
+    }
+
+}
+    </style>
+</head>
+<body>
+<div class="container">
+    <canvas id="eidCanvas"></canvas>
+    <div class="flex">
+        <input type="text" id="username" placeholder="Enter your name">
+        <button onclick="downloadCard()">Download</button>
+        <button class="share-btn" onclick="shareOnWhatsApp()">Share</button>
+        <button class="toggle-btn" onclick="toggleCardVersion()">Toggle Design</button>
+    </div>
+</div>
+<script>
+const canvas = document.getElementById('eidCanvas');
+const ctx = canvas.getContext('2d');
+const img = new Image();
+let isDarkVersion = true;
+
+function loadCardImage() {
+    img.src = isDarkVersion ? 'card1.png' : 'card2.png';
+}
+
+function toCamelCase(str) {
+    return str
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+}
+
+img.onload = () => {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    drawName();
+};
+
+function roundRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + width, y, x + width, y + height, radius);
+    ctx.arcTo(x + width, y + height, x, y + height, radius);
+    ctx.arcTo(x, y + height, x, y, radius);
+    ctx.arcTo(x, y, x + width, y, radius);
+    ctx.closePath();
+    ctx.stroke();
+}
+
+function drawName() {
+    const nameInput = document.getElementById('username').value.trim();
+    ctx.drawImage(img, 0, 0);
+
+    if (nameInput.length > 0) {
+        const name = toCamelCase(nameInput);
+
+        ctx.font = '36px Poppins';
+        ctx.fillStyle = isDarkVersion ? '#FFFFFF' : '#FFFFFF';
+        ctx.textAlign = 'center';
+
+        const textX = canvas.width / 2;
+        const textY = isDarkVersion ? canvas.height * 0.7 : canvas.height * 0.7;
+
+        ctx.fillText(name, textX, textY);
+
+        const textMetrics = ctx.measureText(name);
+        const padding = 180;
+        const rectWidth = textMetrics.width + padding;
+        const rectHeight = 100;
+
+        ctx.strokeStyle = isDarkVersion ? '#EF4749' : '#EF4749';
+        ctx.lineWidth = 3;
+
+        roundRect(ctx, textX - rectWidth / 2, textY - 60, rectWidth, rectHeight, 50);
+    }
+}
+
+function downloadCard() {
+    const link = document.createElement('a');
+    const formattedName = toCamelCase(document.getElementById('username').value).replace(/\s+/g, '_');
+    link.download = `${formattedName}_Eid_Card.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+
+function shareOnWhatsApp() {
+    canvas.toBlob(blob => {
+        const file = new File([blob], 'Eid_Card.png', { type: 'image/png' });
+        const shareData = {
+            files: [file],
+            text: `Eid Mubarak from ${toCamelCase(document.getElementById('username').value)}! 🎉`
+        };
+        if (navigator.canShare && navigator.canShare(shareData)) {
+            navigator.share(shareData).catch(console.error);
+        } else {
+            const fallbackMessage = encodeURIComponent(shareData.text);
+            window.open(`https://wa.me/?text=${fallbackMessage}`, '_blank');
+        }
+    });
+}
+
+function toggleCardVersion() {
+    isDarkVersion = !isDarkVersion;
+    loadCardImage();
+}
+
+document.getElementById('username').addEventListener('input', () => {
+    document.fonts.load('40px Poppins').then(drawName);
+});
+
+// Initial load
+loadCardImage();
+</script>
+</body>
+</html>
